@@ -1,12 +1,16 @@
 import bcrypt from 'bcrypt';
 import { Validation } from '../validations';
 import { UserValidation } from '../validations/user-validation';
-import { LoginUserRequest } from '../dto/request/user-request';
+import {
+  LoginUserRequest,
+  RegisterUserRequest,
+} from '../dto/request/user-request';
 import { UserResponse } from '../dto/response/user-response';
 import { UserModel } from '../models/user-model';
 import { ResponseError } from '../handlers/response-error';
 import jwt from 'jsonwebtoken';
 import { TokenModel } from '../models/token-model';
+import { EnumRoleUser } from '../enums/role-user-enum';
 
 export class UserService {
   public static async login(req: LoginUserRequest): Promise<UserResponse> {
@@ -46,5 +50,32 @@ export class UserService {
     await TokenModel.query()
       .patch({ is_revoked: true })
       .findOne('token', token);
+  }
+
+  public static async registerCustomer(
+    req: RegisterUserRequest
+  ): Promise<UserResponse> {
+    const registerRequest = Validation.validate(UserValidation.REGISTER, req);
+
+    const user = await UserModel.query().findOne(
+      'username',
+      registerRequest.username
+    );
+    if (user) {
+      throw new ResponseError(409, 'Username already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(registerRequest.password, 10);
+    const newUser = await UserModel.query().insert({
+      username: registerRequest.username,
+      password: hashedPassword,
+      name: registerRequest.name,
+      role: registerRequest.role || EnumRoleUser.CUSTOMER,
+    });
+
+    return {
+      username: newUser.username,
+      name: newUser.name,
+    };
   }
 }

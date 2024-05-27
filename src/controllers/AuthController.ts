@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { LoginUserRequest, UserRequest } from '../dto/request/user-request';
+import { LoginUserRequest, RegisterUserRequest, UserRequest } from '../dto/request/user-request';
 import { UserService } from '../services/user-service';
 
 export class AuthController {
@@ -24,6 +24,21 @@ export class AuthController {
       res.json({
         success: true,
         message: 'User logged out',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+  static async register(req: Request, res: Response, next: NextFunction) {
+    try {
+      const request: RegisterUserRequest = req.body as RegisterUserRequest;
+      const response = await UserService.registerCustomer(request);
+      res.json({
+        success: true,
+        message: 'User registered',
+        data: response,
       });
     } catch (error) {
       next(error);
