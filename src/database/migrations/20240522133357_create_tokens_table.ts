@@ -5,10 +5,9 @@ export async function up(knex: Knex): Promise<void> {
     table.increments('id').primary();
     table.string('token').notNullable().unique();
     table
-      .integer('user_id')
-      .notNullable()
-      .references('id')
-      .inTable('users')
+      .uuid('user_id')
+      .references('users.id')
+      .onUpdate('CASCADE')
       .onDelete('CASCADE');
     table.boolean('is_revoked').notNullable().defaultTo(false);
     table.dateTime('expires_at').notNullable();
